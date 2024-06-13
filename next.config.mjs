@@ -8,6 +8,7 @@ const rewrites = async () => {
         {
             source: 'api/:path*',
             destination: 'http://host.docker.internal:8000/api/:path*',
+            // destination: '192.168.11.3:8000/api/:path*',
         },
     ];
 };
