@@ -1,24 +1,25 @@
 'use client'
 
+import { useForm } from "react-hook-form"
 import React, { useState, useEffect } from "react"
 import productsData from "./sample/dummy_products.json"
 import Link from "next/link"
 
 type ProductData = {
-    id: number;
+    id: number | null;
     name: string;
     price: number;
     description: string;
 };
 
-type InputData = {
-    id: string;
-    name: string;
-    price: string;
-    description: string;
-};
-
 export default function Page() {
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors },
+    } = useForm();
+
     // 読込データを保持
     const [data, setData] = useState<Array<ProductData>>([]);
 
@@ -27,61 +28,75 @@ export default function Page() {
     }, [])
 
     // 登録データを保持
-    const [input, setInput] = useState<InputData>({
-        id: "",
-        name: "",
-        price: "",
-        description: "",
-    });
-    // 登録データの値を更新
-    const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { value, name } = event.target;
-        setInput({ ...input, [name]: value });
+    const [id, setId] = useState<number | null>(0);
+    // submit時のactionを分岐させる
+    const [action, setAction] = useState<String>("");
+    const onSubmit = (event: any): void => {
+        const data: ProductData = {
+            id: id,
+            name: event.name,
+            price: Number(event.price),
+            description: event.description,
+        };
+        // actionによってHTTPメソッドと使用するパラメータを切り替える
+        if (action === "add") {
+            handleAdd(data);
+        } else if (action === "update") {
+            if (data.id === null) {
+                return;
+            }
+            handleEdit(data);
+        } else if (action === "delete") {
+            if (data.id === null) {
+                return;
+            }
+            handleDelete(data.id);
+        }
     };
 
     // 新規登録処理、新規登録の表示状態を保持
-    const [showNewRow, setShowNewRow] = useState(false);
-    const handleShowNewRow = (event: React.MouseEvent<HTMLElement>) => {
-        event.preventDefault();
-        setShowNewRow(true);
+    const handleShowNewRow = () => {
+        setId(null);
+        reset({
+            name: "",
+            price: "0",
+            description: "",
+        });
     };
-    const handleAddCancel = (event: React.MouseEvent<HTMLElement>) => {
-        event.preventDefault();
-        setShowNewRow(false);
+    const handleAddCancel = () => {
+        setId(0);
     };
-    const handleAdd = (event: React.MouseEvent<HTMLElement>) => {
-        event.preventDefault();
-        // バックエンドを使用した登録処理を呼ぶ
-        setShowNewRow(false);
+    const handleAdd = (data: ProductData) => {
+        setId(0);
     };
 
     // 更新・削除処理、更新・削除行の表示状態を保持
-    const [editingRow, setEditingRow] = useState(0);
-    const handleEditRow: any = (id: number) => {
-        setShowNewRow(false)
-        setEditingRow(id)
-        const selectedProduct: ProductData = data.find((v) => v.id === id) as ProductData;
-        setInput({
-            id: id.toString(),
+    const handleEditRow = (id: number | null) => {
+        const selectedProduct: ProductData = data.find(
+            (v) => v.id === id
+        ) as ProductData;
+        setId(selectedProduct.id);
+        reset({
             name: selectedProduct.name,
-            price: selectedProduct.price.toString(),
+            price: selectedProduct.price,
             description: selectedProduct.description,
         });
     };
-    const handleEditCancel: any = (id: number) => {
-        setEditingRow(0)
+    const handleEditCancel = () => {
+        setId(0);
     };
-    const handleEdit: any = (id: number) => {
-        setEditingRow(0)
+    const handleEdit = (data: ProductData) => {
+        setId(0);
     };
-    const handleDelete: any = (id: number) => {
-        setEditingRow(0)
+    const handleDelete = (id: number) => {
+        setId(0);
     };
 
     return (
         <>
             <h2>商品一覧</h2>
-            <button onClick={ handleShowNewRow }>商品を追加する</button>
+            <button type="button" onClick={ handleShowNewRow }>商品を追加する</button>
+            <form onSubmit={handleSubmit(onSubmit)}>
             <table>
                 <thead>
                     <tr>
@@ -94,41 +109,57 @@ export default function Page() {
                     </tr>
                 </thead>
                 <tbody>
-                {showNewRow ? (
+                {id === null ? (
                     <tr>
                         <td></td>
                         <td>
-                            <input type="text" name="name" onChange={handleInput} />
+                            <input type="text" id="name" {...register("name", {required: true, maxLength: 100 })} />
+                            {errors.name && (
+                                <div>100文字以内の商品名を入力してください</div>
+                            )}
                         </td>
                         <td>
-                            <input type="number" name="price" onChange={handleInput} />
+                            <input type="number" id="price" {...register("price", {required: true, min: 1, max: 99999999, })} />
+                            {errors.price && (
+                                <div>1から99999999の数値を入力してください</div>
+                            )}
                         </td>
-                        <td><input type="text" name="description" onChange={handleInput} /></td>
+                        <td><input type="text" id="description" {...register("description")} /></td>
+                        {/* ルーティングのために追加 */}
                         <td></td>
                         <td>
-                            <button onClick={ (event) => handleAddCancel }>キャンセル</button>
-                            <button onClick={ (event) => handleAdd }>登録する</button>
+                            <button type="button" onClick={() => handleAddCancel()}>キャンセル</button>
+                            <button type="submit" onClick={() => setAction("add") }>登録する</button>
                         </td>
                     </tr>
-                ) : ""}
+                ) : (
+                    // id != null
+                    ""
+                )}
                 {data.map((data: any) => (
-                    editingRow === data.id ? (
+                    id === data.id ? (
                     <tr key={data.id}>
                         <td>{data.id}</td>
                         <td>
-                            <input type="text" value={input.name} name="name" onChange={handleInput} />
+                            <input type="text" id="name" {...register("name", { required: true, maxLength: 100 })} />
+                            {errors.name && (
+                                <div>100文字以内の商品名を入力してください</div>
+                            )}
                         </td>
                         <td>
-                            <input type="number" value={input.price} name="price" onChange={handleInput} />
+                            <input type="number" id="price" {...register("price", {min: 1, max: 99999999 })} />
+                            {errors.price && (
+                                <div>1から99999999の数値を入力してください</div>
+                            )}
                         </td>
                         <td>
-                            <input type="text" value={input.description} name="description" onChange={handleInput} />
+                            <input type="text" id="description" {...register("description")} />
                         </td>
                         <td></td>
                         <td>
-                            <button onClick={ () => handleEditCancel(data.id) }>キャンセル</button>
-                            <button onClick={ () => handleEdit(data.id) }>更新する</button>
-                            <button onClick={ () => handleDelete(data.id) }>削除する</button>
+                            <button type="button" onClick={() => handleEditCancel()}>キャンセル</button>
+                            <button type="submit" onClick={() => setAction("update")}>更新する</button>
+                            <button type="submit" onClick={() => setAction("delete")}>削除する</button>
                         </td>
                     </tr>
                     ) : (
@@ -146,6 +177,7 @@ export default function Page() {
                 ))}
                 </tbody>
             </table>
+            </form>
         </>
     )
 }
