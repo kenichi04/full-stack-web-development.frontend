@@ -41,7 +41,7 @@ export default function Page({ params }: {
 
     return (
         <>
-            <h2>商品在;庫管理</h2>
+            <h2>商品在庫管理</h2>
             <p>商品在庫の一覧を表示する</p>
             <form>
                 <div>
