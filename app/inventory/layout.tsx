@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,9 +19,8 @@ import {
     Typography,
 } from "@mui/material";
 import { Logout as LogoutIcon, Menu as MenuIcon } from "@mui/icons-material";
-
-declare module "@mui/material/stayles" {
-    // 指定を単純にするためモバイルとPCの2つに限定
+declare module "@mui/material/styles" {
+    // 指定を単純にするためにモバイルとPCの2つに限定する
     interface BreakpointOverrides {
         xs: false;
         sm: false;
@@ -29,7 +28,7 @@ declare module "@mui/material/stayles" {
         lg: false;
         xl: false;
         mobile: true;
-        desctop: true;
+        desktop: true;
     }
 }
 
@@ -41,20 +40,18 @@ const defaultTheme = createTheme({
         },
     },
 });
-
 export default function InventoryLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    /* サイドバーの開閉を管理する */
+    /** サイドバーの開閉を管理する */
     const [open, setOpen] = useState(false);
-
     const toggleDrawer = (open: boolean) => {
         setOpen(open);
     };
 
-    /* 各種画面への遷移を管理する */
+    /** 各種画面への遷移を管理する */
     const router = useRouter();
 
     // ログアウト処理
@@ -62,8 +59,8 @@ export default function InventoryLayout({
         router.replace("/login");
     };
 
-    /* 開閉対象となるサイドバー本体 */
-    const list = () => {
+    /** 開閉対象となるサイドバー本体 */
+    const list = () => (
         <Box sx={{ width: 240 }}>
             <Toolbar />
             <Divider />
@@ -82,65 +79,64 @@ export default function InventoryLayout({
                 <Divider />
             </List>
         </Box>
-    };
+    );
 
-    // Material UI を使用
     return (
         <ThemeProvider theme={defaultTheme}>
-        <Box sx={{ display: "flex" }}>
-
-            <AppBar position="fixed">
-                <Toolbar>
-                    <IconButton onClick={() => toggleDrawer(true)}>
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography
-                        variant="h6"
-                        noWrap
-                        component="div"
-                        sx={{ flexGrow: 1 }}>
-                        在庫管理システム
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<LogoutIcon />}
-                        onClick={() => handleLogout()}>
-                        ログアウト
-                    </Button>
-                </Toolbar>
-            </AppBar>
-
-            <Drawer open={open} onClose={() => toggleDrawer(false)} anchor="left">
-                {list()}
-            </Drawer>
-
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    // AppBarと被るため下にずらしている
-                    marginTop: "64px",
-                    width: "100%",
-                    background: "white",
-                }}>
+            <Box sx={{ display: "flex" }}>
+                <AppBar position="fixed">
+                    <Toolbar>
+                        <IconButton onClick={() => toggleDrawer(true)}>
+                            <MenuIcon />
+                        </IconButton>
+                        <Typography
+                            variant="h6"
+                            noWrap
+                            component="div"
+                            sx={{ flexGrow: 1 }}
+                        >
+                            在庫管理システム
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<LogoutIcon />}
+                            onClick={() => handleLogout()}
+                        >
+                            ログアウト
+                        </Button>
+                    </Toolbar>
+                </AppBar>
+                <Drawer open={open} onClose={() => toggleDrawer(false)} anchor="left">
+                    {list()}
+                </Drawer>
+                <Box
+                    component="main"
+                    sx={{
+                        flexGrow: 1,
+                        p: 3,
+                        // AppBarと被るため下にずらしている
+                        marginTop: "64px",
+                        width: "100%",
+                        background: "white",
+                    }}
+                >
                     {children}
+                </Box>
+                <Box
+                    component='footer'
+                    sx={{
+                        width: '100%',
+                        position: 'fixed',
+                        textAlign: 'center',
+                        bottom: 0,
+                        background: "#1976d2",
+                    }}
+                >
+                    <Typography variant="caption" color="white">
+                        ©2023 full stack web development
+                    </Typography>
+                </Box>
             </Box>
-
-            <Box
-                component='footer'
-                sx={{
-                    width: '100%',
-                    position: 'fixed',
-                    textAlign: 'center',
-                    bottom: 0,
-                    background: '#1976d2',
-                }}>
-                <Typography variant="caption" color="white">
-                    @2023 full stack web development
-                </Typography>
-            </Box>
-        </Box>
         </ThemeProvider>
     );
 }
