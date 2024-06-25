@@ -1,6 +1,9 @@
 'use client';
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
+    createTheme,
     AppBar,
     Box,
     Button,
@@ -17,18 +20,78 @@ import {
 } from "@mui/material";
 import { Logout as LogoutIcon, Menu as MenuIcon } from "@mui/icons-material";
 
+declare module "@mui/material/stayles" {
+    // 指定を単純にするためモバイルとPCの2つに限定
+    interface BreakpointOverrides {
+        xs: false;
+        sm: false;
+        md: false;
+        lg: false;
+        xl: false;
+        mobile: true;
+        desctop: true;
+    }
+}
+
+const defaultTheme = createTheme({
+    breakpoints: {
+        values: {
+            mobile: 0,
+            desktop: 600,
+        },
+    },
+});
+
 export default function InventoryLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    /* サイドバーの開閉を管理する */
+    const [open, setOpen] = useState(false);
+
+    const toggleDrawer = (open: boolean) => {
+        setOpen(open);
+    };
+
+    /* 各種画面への遷移を管理する */
+    const router = useRouter();
+
+    // ログアウト処理
+    const handleLogout = () => {
+        router.replace("/login");
+    };
+
+    /* 開閉対象となるサイドバー本体 */
+    const list = () => {
+        <Box sx={{ width: 240 }}>
+            <Toolbar />
+            <Divider />
+            <List>
+                <ListItem component="a" href="/inventory/products" disablePadding>
+                    <ListItemButton>
+                        <ListItemText primary="商品一覧" />
+                    </ListItemButton>
+                </ListItem>
+                <Divider />
+                <ListItem component="a" href="/inventory/import_sales" disablePadding>
+                    <ListItemButton>
+                        <ListItemText primary="売上一括登録" />
+                    </ListItemButton>
+                </ListItem>
+                <Divider />
+            </List>
+        </Box>
+    };
+
     // Material UI を使用
     return (
+        <ThemeProvider theme={defaultTheme}>
         <Box sx={{ display: "flex" }}>
 
             <AppBar position="fixed">
                 <Toolbar>
-                    <IconButton>
+                    <IconButton onClick={() => toggleDrawer(true)}>
                         <MenuIcon />
                     </IconButton>
                     <Typography
@@ -40,31 +103,15 @@ export default function InventoryLayout({
                     </Typography>
                     <Button
                         variant="contained"
-                        startIcon={<LogoutIcon />}>
+                        startIcon={<LogoutIcon />}
+                        onClick={() => handleLogout()}>
                         ログアウト
                     </Button>
                 </Toolbar>
             </AppBar>
 
-            <Drawer anchor="left">
-                <Box sx={{ width: 240 }}>
-                    <Toolbar />
-                    <Divider />
-                    <List>
-                        <ListItem component="a" href="/inventory/products" disablePadding>
-                            <ListItemButton>
-                                <ListItemText primary="商品一覧" />
-                            </ListItemButton>
-                        </ListItem>
-                        <Divider />
-                        <ListItem component="a" href="/inventory/import_sales" dissablePadding>
-                            <ListItemButton>
-                                <ListItemText primary="売上一括登録" />
-                            </ListItemButton>
-                        </ListItem>
-                        <Divider />
-                    </List>
-                </Box>
+            <Drawer open={open} onClose={() => toggleDrawer(false)} anchor="left">
+                {list()}
             </Drawer>
 
             <Box
@@ -94,7 +141,6 @@ export default function InventoryLayout({
                 </Typography>
             </Box>
         </Box>
-
-
+        </ThemeProvider>
     );
 }
